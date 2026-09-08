@@ -119,7 +119,7 @@ public class Configuration {
             }
         }
         if (totalFrequency == 0L) {
-            mascot.setAnchor(new Point((int)(Math.random() * (double)(mascot.getEnvironment().getScreen().getRight() - mascot.getEnvironment().getScreen().getLeft())) + mascot.getEnvironment().getScreen().getLeft(), mascot.getEnvironment().getScreen().getTop() - 256));
+            // 禁用爬墙后，墙边/半空可能没有候选动作；原地落下而不是传送到屏幕顶部。
             return this.buildBehavior("\u843d\u4e0b\u3059\u308b");
         }
         double random = Math.random() * (double)totalFrequency;
@@ -146,4 +146,3 @@ public class Configuration {
         return this.behaviorBuilders;
     }
 }
-

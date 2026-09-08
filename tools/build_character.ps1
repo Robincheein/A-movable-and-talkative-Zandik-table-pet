@@ -43,7 +43,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Staged JAR build failed.' }
 & "$jdk\java.exe" '-Dfile.encoding=UTF-8' -cp "$testClasses;$staged;lib/*" com.group_finity.mascot.chat.CharacterPromptSelfTest dist
 if ($LASTEXITCODE -ne 0) { throw 'Packaged JAR verification failed.' }
 try {
-    [System.IO.File]::Replace($staged, (Join-Path $projectRoot 'dist/Shimeji.jar'), $null)
+    [System.IO.File]::Replace($staged, (Join-Path $projectRoot 'dist/Shimeji.jar'), [NullString]::Value)
     Write-Host 'BUILD_CHARACTER_OK: dist/Shimeji.jar'
 } catch {
     Write-Host 'BUILD_CHARACTER_STAGED: close the pet and use the root startup BAT to install.'

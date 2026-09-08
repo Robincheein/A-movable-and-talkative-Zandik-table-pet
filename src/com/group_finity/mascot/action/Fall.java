@@ -49,9 +49,9 @@ extends ActionBase {
         if (this.getEnvironment().getFloor().isOn(pos)) {
             onBorder = true;
         }
-        if (this.getEnvironment().getWall().isOn(pos)) {
-            onBorder = true;
-        }
+        // 动物版暂不爬墙：碰到墙不能结束下落，否则会在边缘卡住。
+        // 恢复爬墙时再恢复墙面落点检测及 Behavior.xml 的对应入口。
+        // if (this.getEnvironment().getWall().isOn(pos)) { onBorder = true; }
         return super.hasNext() && !onBorder;
     }
 
@@ -75,6 +75,8 @@ extends ActionBase {
         Point start = this.getMascot().getAnchor();
         block0: for (int i = 0; i <= dev; ++i) {
             int x = start.x + dx * i / dev;
+            x = Math.max(this.getEnvironment().getWorkArea().getLeft(),
+                    Math.min(this.getEnvironment().getWorkArea().getRight() - 1, x));
             int y = start.y + dy * i / dev;
             this.getMascot().setAnchor(new Point(x, y));
             if (dy > 0) {
@@ -83,7 +85,8 @@ extends ActionBase {
                     if (this.getEnvironment().getFloor(true).isOn(this.getMascot().getAnchor())) break block0;
                 }
             }
-            if (this.getEnvironment().getWall(true).isOn(this.getMascot().getAnchor())) break;
+            // 动物版沿墙继续下落，不吸附到墙面。
+            // if (this.getEnvironment().getWall(true).isOn(this.getMascot().getAnchor())) break;
         }
         this.getAnimation().next(this.getMascot(), this.getTime());
     }
@@ -140,4 +143,3 @@ extends ActionBase {
         return this.modY;
     }
 }
-

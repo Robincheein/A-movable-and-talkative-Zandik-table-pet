@@ -1,5 +1,11 @@
 # 多托雷 AI 桌宠（Zandik）
 
+当前版本：**2.0.0-animal.1 — 薄荷色狐狸形态**。所有旧桌宠动作贴图已换成新动物图，暂时禁用爬墙、挂天花板及跳墙入口。旧版保存在 Git 标签 `pre-animal-20260908`。
+
+![动物形态动作预览](assets/skins/dottore_fox/preview.png)
+
+本轮改动、离线测试与恢复方式见 [动物版说明](docs/animal_release.md)。
+
 基于开源 [Shimeji](https://github.com/Group-Finity/Shimeji-ee) 桌宠引擎开发的 **Windows 桌面宠物**，并接入 AI 对话系统，让桌面上的小人以《原神》角色 **多托雷（Il Dottore）** 的口吻与你对话、查阅资料、记住与你相关的事。
 
 > 所有界面文字与说明均使用简体中文；Shimeji 引擎的动作/行为配置为日文 XML。
@@ -8,11 +14,11 @@
 
 ## ✨ 功能特性
 
-- **经典 Shimeji 桌宠行为**：走动、攀爬窗口边缘、抓取与拖拽、投掷、分裂、集中/只保留一个等，动作由 `conf/Actions.xml` 与 `conf/Behavior.xml` 驱动。
+- **动物形态桌宠行为**：四帧走路/跑动、坐下、歪头、抬爪、蜷睡、拖起和落地；原爬墙入口已注释，动作由 `conf/Actions.xml` 与 `conf/Behavior.xml` 驱动。
 - **AI 角色扮演对话**：点击小人或右键菜单「对话」打开聊天窗口，AI 以多托雷的冷静、傲慢、缺乏常规共情的口吻回复（默认简体中文，称呼用户为「旅行者」）。
 - **RAG 角色知识检索**：把 `character/` 下的角色设定与原文资料分块、做 TF-IDF 索引，按当前对话动态检索最相关素材拼进提示词，让语气与设定更贴合原作。
 - **长期记忆（SQLite）**：每轮对话结束后立即把会话增量写入数据库（即使直接结束进程也不会丢），并自动抽取结构化长期记忆（身份、偏好、事件、项目、关系、指令），跨会话保留；重启后记忆仍在。
-- **本地 / 远程双后端**：默认调用本地 Ollama 模型 `dottore:7b`，也可一键切回远程 DeepSeek API。
+- **本地 / 远程双后端**：当前使用远程 DeepSeek API；保留可选 Ollama 接口。本次换图不改变模型、人设或长期记忆。
 - **Agent 工具调用**：远程后端可让 AI 调用工具（只读文件、列目录、查系统信息、网页搜索/抓取、获取当前活动窗口、控制小人转身等）。
 
 ---
@@ -32,6 +38,8 @@
 
 ### 1. 直接运行（已打包）
 
+从 GitHub 首次下载时，复制 `conf/chat_config.example.properties` 为 `conf/chat_config.properties`，填入自己的 `api.key`。如果直接从 `dist` 目录运行，也要在 `dist/conf/` 下创建同名配置。本机已有配置不用覆盖。仓库不包含密钥、聊天记录和记忆数据库。
+
 ```bat
 启动多托雷.bat
 ```
@@ -48,6 +56,14 @@ java -Dfile.encoding=UTF-8 -jar dist\Shimeji.jar
 ```
 
 ### 2. 从源码构建
+
+本版本推荐使用 JDK 8 运行已包含离线测试的构建脚本：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/build_animal.ps1
+```
+
+无需重新绘图或运行抠图脚本，透明 PNG 已在仓库中。传统 Ant 构建方式仍保留：
 
 ```powershell
 ant            # 编译 + 打包 dist/Shimeji.jar，并复制 conf/img/lib/character 资源到 dist/
@@ -66,7 +82,7 @@ ant clean      # 清空 build/ 与 dist/
 
 ```properties
 # AI 后端：ollama=本地模型，api=远程 API
-ai.provider=ollama
+ai.provider=api
 
 # Ollama 本地模型
 ollama.endpoint=http://127.0.0.1:11434/v1/chat/completions
@@ -83,8 +99,8 @@ max.history=16
 
 # RAG 检索
 rag.enabled=true
-rag.top_k=2
-rag.min_similarity=0.05
+rag.top_k=4
+rag.min_similarity=0.01
 
 # SQLite 长期记忆
 memory.enabled=true
@@ -113,7 +129,7 @@ memory.retrieve_top_k=8
 
 修改角色文本后，程序启动时会检测文件指纹并**自动重建 RAG 索引**（`character/rag_index.json`），无需手动操作。
 
-### 本地模型微调（Ollama）
+### 可选本地模型提示词定制（Ollama，并非权重微调）
 
 专用模型定义在 `ollama/Modelfile`，基于 `qwen2.5:7b` 并加入角色锁、示范对话、8192 上下文与较低随机性。修改后重建模型：
 
@@ -121,7 +137,7 @@ memory.retrieve_top_k=8
 & "D:\soft_system\Ollama\ollama.exe" create dottore:7b -f ".\ollama\Modelfile"
 ```
 
-`ai.provider=api` 时无需本地模型，但仍建议 `ollama` 作为离线/低延迟的默认后端。详见 [docs/local_model.md](docs/local_model.md)。
+`ai.provider=api` 时无需本地模型。当前仍使用 API；Ollama 是可选方案。详见 [docs/local_model.md](docs/local_model.md)。
 
 ---
 

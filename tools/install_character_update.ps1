@@ -7,10 +7,11 @@ try {
     # Open exclusively first: do not touch the installed JAR while a pet holds it open.
     $stream = [System.IO.File]::Open($target, 'Open', 'ReadWrite', 'None')
     $stream.Close()
-    [System.IO.File]::Replace($staged, $target, $null)
+    [System.IO.File]::Replace($staged, $target, [NullString]::Value)
     Write-Host 'Character update installed.'
     exit 0
 } catch {
-    Write-Host 'Update is ready but the installed JAR is still in use. Exit the pet first.'
+    Write-Host ('Update not installed: ' + $_.Exception.Message)
+    Write-Host 'If the pet is running, exit it first, then retry.'
     exit 1
 }

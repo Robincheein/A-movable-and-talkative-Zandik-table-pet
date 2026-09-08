@@ -165,6 +165,7 @@ public class Main {
         trayPopup.add(closeMenu);
         try {
             TrayIcon icon = new TrayIcon(ImageIO.read(Main.class.getResource("/icon.png")), "Dottore Desktop Pet", trayPopup);
+            icon.setImageAutoSize(true);
             icon.addMouseListener(new MouseAdapter(){
 
                 @Override
@@ -257,4 +258,3 @@ public class Main {
         instance = new Main();
     }
 }
-

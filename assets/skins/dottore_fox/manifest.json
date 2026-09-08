@@ -1,0 +1,167 @@
+{
+  "version": "2.0.0-animal.1",
+  "size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    128
+  ],
+  "climbing_enabled": false,
+  "runtime_mapping": {
+    "shime1.png": "idle",
+    "shime2.png": "walk_01",
+    "shime3.png": "walk_02",
+    "shime4.png": "falling",
+    "shime5.png": "dragged",
+    "shime6.png": "dragged",
+    "shime7.png": "dragged",
+    "shime8.png": "dragged",
+    "shime9.png": "dragged",
+    "shime10.png": "dragged",
+    "shime11.png": "idle",
+    "shime12.png": "dragged",
+    "shime13.png": "dragged",
+    "shime14.png": "dragged",
+    "shime15.png": "head_tilt",
+    "shime16.png": "head_tilt",
+    "shime17.png": "head_tilt",
+    "shime18.png": "sleep",
+    "shime19.png": "sleep",
+    "shime20.png": "sleep",
+    "shime21.png": "sleep",
+    "shime22.png": "falling",
+    "shime23.png": "dragged",
+    "shime24.png": "dragged",
+    "shime25.png": "dragged",
+    "shime26.png": "head_tilt",
+    "shime27.png": "head_tilt",
+    "shime28.png": "head_tilt",
+    "shime29.png": "head_tilt",
+    "shime30.png": "sleep",
+    "shime31.png": "idle",
+    "shime32.png": "paw",
+    "shime33.png": "paw",
+    "shime34.png": "walk_01",
+    "shime35.png": "walk_02",
+    "shime36.png": "walk_03",
+    "shime37.png": "paw",
+    "shime38.png": "paw",
+    "shime39.png": "paw",
+    "shime40.png": "paw",
+    "shime41.png": "paw",
+    "shime42.png": "paw",
+    "shime43.png": "paw",
+    "shime44.png": "paw",
+    "shime45.png": "paw",
+    "shime46.png": "paw",
+    "fox_walk_01.png": "walk_01",
+    "fox_walk_02.png": "walk_02",
+    "fox_walk_03.png": "walk_03",
+    "fox_walk_04.png": "walk_04",
+    "icon.png": "idle"
+  },
+  "sources": {
+    "idle": {
+      "path": "assets/concepts/dottore_fox_idle_20260908_white.png",
+      "sha256": "2bd681771e3e276c8bc87531d801942b1601d480ee3f403e6d1d3be4666cef62",
+      "bounds": [
+        190,
+        26,
+        1132,
+        1221
+      ]
+    },
+    "walk_01": {
+      "path": "assets/concepts/dottore_actions/walk_01_contact.png",
+      "sha256": "8cbf4a6222073b2efcdcede0803e343e52a7e6696d451df5299f403c53e28ba0",
+      "bounds": [
+        102,
+        184,
+        1186,
+        987
+      ]
+    },
+    "walk_02": {
+      "path": "assets/concepts/dottore_actions/walk_02_passing.png",
+      "sha256": "046a85139033721a2d2b5d66209c6d576d2cc8956e718a539b030f7ef08a491f",
+      "bounds": [
+        106,
+        183,
+        1187,
+        1033
+      ]
+    },
+    "walk_03": {
+      "path": "assets/concepts/dottore_actions/walk_03_opposite_contact.png",
+      "sha256": "332e81e3dfaeea70bd9a8630c81f2a7f205e677c27693fc33f4261b82d3869c3",
+      "bounds": [
+        102,
+        176,
+        1186,
+        1011
+      ]
+    },
+    "walk_04": {
+      "path": "assets/concepts/dottore_actions/walk_04_recovery.png",
+      "sha256": "36e102f3083d9db7415aa1b2626266a1150a27ff357f94d22d0f09f0ba691ffc",
+      "bounds": [
+        146,
+        151,
+        1175,
+        1012
+      ]
+    },
+    "paw": {
+      "path": "assets/concepts/dottore_actions/interact_paw.png",
+      "sha256": "84d0159df1ad4a9e5b3e42357845fbc19679ef800fd6ffa9f7118485880386bf",
+      "bounds": [
+        207,
+        16,
+        1123,
+        1231
+      ]
+    },
+    "head_tilt": {
+      "path": "assets/concepts/dottore_actions/interact_head_tilt.png",
+      "sha256": "836d0dc448ceb518f499a57e7d022d7fe616642028962d5032790e73a99cfba0",
+      "bounds": [
+        179,
+        36,
+        1108,
+        1215
+      ]
+    },
+    "sleep": {
+      "path": "assets/concepts/dottore_actions/sleep_curled.png",
+      "sha256": "6d8f6cf01f5d1e7a87769f90c5f873611f72978aec7c56aa84a873e9567990b6",
+      "bounds": [
+        108,
+        251,
+        1148,
+        1018
+      ]
+    },
+    "dragged": {
+      "path": "assets/concepts/dottore_actions/dragged.png",
+      "sha256": "3dada788d4f5b0933c036339244ef0a18df2bbeb2879a1c1619fc4922775b9b7",
+      "bounds": [
+        297,
+        77,
+        889,
+        1194
+      ]
+    },
+    "falling": {
+      "path": "assets/concepts/dottore_actions/falling.png",
+      "sha256": "7f670e3b5a3cf2e3acac54cedd6fe24f3480e5879cdcc095c332d0ccb5813e13",
+      "bounds": [
+        121,
+        54,
+        1205,
+        1107
+      ]
+    }
+  }
+}
