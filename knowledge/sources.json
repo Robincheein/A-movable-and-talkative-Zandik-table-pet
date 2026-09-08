@@ -1,0 +1,30 @@
+{
+  "sites": [
+    {
+      "id": "bwiki",
+      "enabled": true,
+      "api": "https://wiki.biligame.com/ys/api.php",
+      "page_url": "https://wiki.biligame.com/ys/{title}",
+      "pages": [
+        "多托雷（NPC）",
+        "愚人众",
+        "血红之证",
+        "花于何处醒来",
+        "身土坏空，五蕴识转",
+        "向导笔记/人物"
+      ]
+    },
+    {
+      "id": "fandom",
+      "enabled": false,
+      "api": "https://genshin-impact.fandom.com/api.php",
+      "page_url": "https://genshin-impact.fandom.com/wiki/{title}",
+      "pages": [
+        "Dottore",
+        "Pantalone",
+        "Fatui",
+        "Archon_Quest"
+      ]
+    }
+  ]
+}

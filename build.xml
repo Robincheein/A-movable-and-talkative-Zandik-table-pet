@@ -1,0 +1,99 @@
+<project name="Zandik-Shimeji" default="build" basedir=".">
+
+    <description>多托雷 AI 桌宠 — 基于 Shimeji 的 AI 对话桌面宠物</description>
+
+    <!-- 目录路径 -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="conf.dir" value="conf"/>
+    <property name="img.dir" value="img"/>
+    <property name="character.dir" value="character"/>
+    <property name="resources.dir" value="resources"/>
+
+    <!-- 清理 -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- 初始化目录 -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <!-- 编译 -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}"
+               destdir="${build.dir}"
+               source="8"
+               target="8"
+               encoding="UTF-8"
+               includeantruntime="false"
+               debug="true"
+               deprecation="off">
+            <classpath>
+                <fileset dir="${lib.dir}">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+            <compilerarg line="-Xlint:-options"/>
+        </javac>
+    </target>
+
+    <!-- 打包 JAR -->
+    <target name="build" depends="compile">
+        <!-- 复制资源到 build 目录 -->
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+
+        <!-- 复制资源文件夹到 build -->
+        <copy todir="${build.dir}" failonerror="false">
+            <fileset dir="${resources.dir}"/>
+        </copy>
+
+        <!-- 创建 JAR -->
+        <jar destfile="${dist.dir}/Shimeji.jar" basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="com.group_finity.mascot.Main"/>
+                <attribute name="Class-Path"
+                           value="./ img/ conf/ ./lib/jna.jar ./lib/platform.jar ./lib/gson-2.10.1.jar ./lib/sqlite-jdbc-3.42.0.0.jar"/>
+            </manifest>
+            <!-- 排除顶层资源文件，它们从 conf/img/lib 目录加载 -->
+            <exclude name="conf/**"/>
+            <exclude name="img/**"/>
+            <exclude name="lib/**"/>
+            <exclude name="character/**"/>
+        </jar>
+
+        <!-- 复制依赖文件到 dist -->
+        <copy todir="${dist.dir}">
+            <fileset dir=".">
+                <include name="img/**"/>
+                <include name="conf/**"/>
+                <include name="lib/**"/>
+                <include name="character/**"/>
+                <exclude name="character/memory/**"/>
+            </fileset>
+        </copy>
+
+        <echo message="========================================="/>
+        <echo message="  构建完成！"/>
+        <echo message="  输出: ${dist.dir}/Shimeji.jar"/>
+        <echo message="  运行: java -jar dist/Shimeji.jar"/>
+        <echo message="========================================="/>
+    </target>
+
+    <!-- 直接运行（用于开发测试） -->
+    <target name="run" depends="build">
+        <java jar="${dist.dir}/Shimeji.jar" fork="true" dir="${dist.dir}">
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
+        </java>
+    </target>
+
+</project>

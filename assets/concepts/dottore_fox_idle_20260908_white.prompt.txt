@@ -1,0 +1,6 @@
+Tool: built-in image_gen, reference-based edit.
+Final concept: solid off-white background, not transparent, not yet installed in the pet.
+Base generation prompt: dottore_fox_idle_20260908.prompt.txt
+
+Final edit prompt:
+Edit this Dottore mint fox concept: change ONLY the background. Replace the entire faux gray-white checkerboard with a completely uniform solid warm white (#FAFAF7) background, including enclosed gaps around hair locks and limbs. Preserve exactly the character design, pose, colors, linework, mask, proportions, facial expression, ears, paws and tail. No checkerboard anywhere, no added shadow, no text. This deliverable is a clean concept illustration on solid white; do not simulate transparency.
