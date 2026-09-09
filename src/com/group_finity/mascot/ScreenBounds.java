@@ -3,7 +3,7 @@ package com.group_finity.mascot;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-/** Clamp the visible artwork, not its transparent canvas or just its foot anchor. */
+/** Top/left/right guard only. The physics engine exclusively owns the floor. */
 public final class ScreenBounds {
     private ScreenBounds() {}
 
@@ -12,10 +12,10 @@ public final class ScreenBounds {
         int minX = work.x + pivot.x - visible.x;
         int maxX = work.x + work.width + pivot.x - visible.x - visible.width;
         int minY = work.y + pivot.y - visible.y;
-        // The foot anchor cannot pass the floor even if a pose has bottom padding.
-        int maxY = Math.min(work.y + work.height,
-                work.y + work.height + pivot.y - visible.y - visible.height);
-        return new Point(limit(anchor.x, minX, maxX), limit(anchor.y, minY, maxY));
+        // Never lift the foot anchor to fit the bottom of a sprite. Frame padding,
+        // tail tips and scale rounding can extend below it; lifting would make the
+        // floor test fail and restart falling/landing on each animation change.
+        return new Point(limit(anchor.x, minX, maxX), Math.max(minY, anchor.y));
     }
 
     private static int limit(int value, int low, int high) {

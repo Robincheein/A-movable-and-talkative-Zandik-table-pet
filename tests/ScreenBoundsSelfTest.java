@@ -14,11 +14,20 @@ public final class ScreenBoundsSelfTest {
                     for (int y : new int[]{work.y-5000,work.y,work.y+work.height/2,work.y+work.height+5000}) {
                         Point a = ScreenBounds.clamp(new Point(x,y),pivot,visible,work);
                         Rectangle actual = new Rectangle(visible); actual.translate(a.x-pivot.x,a.y-pivot.y);
-                        if (!work.contains(actual) || a.y > work.y+work.height) throw new AssertionError(actual);
+                        if (actual.x < work.x || actual.x+actual.width > work.x+work.width || actual.y < work.y)
+                            throw new AssertionError(actual);
+                        if (y >= work.y+pivot.y-visible.y && a.y != y) throw new AssertionError("Bottom guard moved anchor");
                         if (!a.equals(ScreenBounds.clamp(a,pivot,visible,work))) throw new AssertionError("Clamp jitter");
                     }
             }
         }
-        System.out.println("SCREEN_BOUNDS_OK: four edges, scales, negative coordinates, stable clamping");
+        // Reproduce changing sprite bottoms/rounding below the foot pivot.
+        Rectangle work = new Rectangle(0,0,1920,1040);
+        for (int extra = 0; extra < 40; extra++) {
+            Point foot = new Point(600,1040);
+            Point result = ScreenBounds.clamp(foot,new Point(64,128),new Rectangle(0,20,128,108+extra),work);
+            if (!result.equals(foot)) throw new AssertionError("Animation bottom restarted landing");
+        }
+        System.out.println("SCREEN_BOUNDS_OK: top/left/right, scales, negative coordinates, floor untouched across frames");
     }
 }

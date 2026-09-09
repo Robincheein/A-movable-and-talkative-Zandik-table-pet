@@ -250,8 +250,7 @@ public class AnimalSkinSelfTest {
             check(!com.group_finity.mascot.action.FoxInteraction.start(mascot,
                     com.group_finity.mascot.action.FoxInteraction.Kind.PET, config), "Head pat while airborne");
             check(mascot.getBehavior() == airborne, "Rejected interaction changed behavior");
-            // Drag beyond all four edges: visible artwork stays inside without
-            // releasing the mouse, then follows it again on return.
+            // Top/side guards keep control; bottom is intentionally unrestricted.
             cursor.setX(left + 300); cursor.setY(top + 150); cursor.setDx(0);
             mascot.setAnchor(new Point(left + 300, top + 230));
             mascot.setBehavior(config.buildBehavior(com.group_finity.mascot.behavior.UserBehavior.BEHAVIORNAME_DRAGGED));
@@ -263,6 +262,7 @@ public class AnimalSkinSelfTest {
                     mascot.tick();
                     check(mascot.getBehavior() == edgeDrag, "Edge drag released the mouse");
                     assertInside(mascot);
+                    if (outside.y > bottom) check(mascot.getAnchor().y > bottom, "Bottom guard still enabled");
                 }
             }
             cursor.setX(left + 300); cursor.setY(top + 150); mascot.tick();
@@ -270,6 +270,17 @@ public class AnimalSkinSelfTest {
             edgeDrag.mouseReleased(new MouseEvent(mascot.getWindow().asJWindow(), MouseEvent.MOUSE_RELEASED,
                     0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
             check(mascot.getBehavior() != edgeDrag, "Edge drag cannot release");
+            // Grounded frame changes must not lift the foot anchor, including
+            // artwork whose tail/padding reaches below its nominal pivot.
+            for (String sprite : images) for (boolean facing : new boolean[]{false,true}) {
+                mascot.setImage(com.group_finity.mascot.image.ImagePairLoader.load("/"+sprite,new Point(64,128)).getImage(facing));
+                mascot.setAnchor(new Point((left+right)/2,bottom));
+                for (int repeat=0; repeat<3; repeat++) {
+                    mascot.constrainToWorkArea();
+                    check(mascot.getAnchor().y == bottom, "Frame change lifted feet: " + sprite);
+                    check(mascot.getEnvironment().getFloor().isOn(mascot.getAnchor()), "Frame change lost ground");
+                }
+            }
             // Explicit unreachable walk targets must terminate at the visible edge.
             for (int target : new int[]{left-500, right+500}) {
                 mascot.setAnchor(new Point((left+right)/2, bottom));
@@ -309,6 +320,8 @@ public class AnimalSkinSelfTest {
         java.awt.Rectangle visible = mascot.getImage().getVisibleBounds(SettingsManager.getInstance().getCharacterScale());
         java.awt.Rectangle window = mascot.getBounds();
         visible.translate(window.x, window.y);
-        check(mascot.getEnvironment().getWorkArea().toRectangle().contains(visible), "Visible artwork outside work area: " + visible);
+        java.awt.Rectangle area = mascot.getEnvironment().getWorkArea().toRectangle();
+        check(visible.x >= area.x && visible.x + visible.width <= area.x + area.width && visible.y >= area.y,
+                "Visible artwork outside top/side limits: " + visible);
     }
 }
