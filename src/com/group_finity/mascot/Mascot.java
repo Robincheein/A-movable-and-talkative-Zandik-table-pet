@@ -31,6 +31,9 @@ public class Mascot {
     private int time = 0;
     private boolean animating = true;
     private MascotEnvironment environment = new MascotEnvironment(this);
+    private final PetMood petMood = new PetMood();
+
+    public PetMood getPetMood() { return petMood; }
 
     public Mascot() {
         this.id = lastId.incrementAndGet();
@@ -49,6 +52,7 @@ public class Mascot {
         if (this.isAnimating() && this.getBehavior() != null) {
             try {
                 this.getBehavior().next();
+                this.constrainToWorkArea();
             }
             catch (CantBeAliveException e) {
                 log.log(Level.SEVERE, "\u751f\u304d\u7d9a\u3051\u308b\u3053\u3068\u304c\u51fa\u6765\u306a\u3044\u72b6\u6cc1", e);
@@ -61,14 +65,10 @@ public class Mascot {
     public void apply() {
         if (this.isAnimating()) {
             if (this.getImage() != null) {
-                this.getWindow().asJWindow().setBounds(this.getBounds());
-                this.getWindow().setImage(this.getImage().getImage(
-                        SettingsManager.getInstance().getCharacterScale()));
-                if (!this.getWindow().asJWindow().isVisible()) {
-                    this.getWindow().asJWindow().setVisible(true);
-                    this.getWindow().setWindowOpacity(SettingsManager.getInstance().getCharacterOpacity());
-                }
-                this.getWindow().updateImage();
+                this.constrainToWorkArea();
+                this.getWindow().present(this.getBounds(), this.getImage().getImage(
+                        SettingsManager.getInstance().getCharacterScale()),
+                        SettingsManager.getInstance().getCharacterOpacity());
             } else if (this.getWindow().asJWindow().isVisible()) {
                 this.getWindow().asJWindow().setVisible(false);
             }
@@ -97,6 +97,17 @@ public class Mascot {
 
     public void setAnchor(Point anchor) {
         this.anchor = anchor;
+    }
+
+    /** Does not release the mouse, change behavior, or teleport to a random point. */
+    public boolean constrainToWorkArea() {
+        if (image == null) return false;
+        double scale = SettingsManager.getInstance().getCharacterScale();
+        Point bounded = ScreenBounds.clamp(anchor, image.getCenter(scale),
+                image.getVisibleBounds(scale), environment.getWorkArea().toRectangle());
+        boolean changed = !bounded.equals(anchor);
+        anchor = bounded;
+        return changed;
     }
 
     public MascotImage getImage() {
@@ -170,4 +181,3 @@ public class Mascot {
         return this.environment;
     }
 }
-

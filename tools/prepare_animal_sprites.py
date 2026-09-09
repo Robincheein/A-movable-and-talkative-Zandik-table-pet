@@ -121,6 +121,14 @@ def main():
         draw.text((x, y + 139), name, fill="#def5ef")
     sheet.save(DEST / "preview.png")
     print(f"ANIMAL_SPRITES_OK: {len(sprites)} poses, {len(runtime)} runtime images, preserved all source files")
+    # Apply the newer shared-proportion gait last so this entry point cannot
+    # accidentally restore the old four-frame walk after an asset rebuild.
+    if (CONCEPTS / 'dottore_walk_v2/atlas.png').exists():
+        from prepare_walk_v2 import main as prepare_walk
+        prepare_walk()
+    if (CONCEPTS / 'dottore_pet_moods_v2/withdraw.png').exists():
+        from prepare_pet_sprites import main as prepare_pet
+        prepare_pet()
 
 
 if __name__ == "__main__":

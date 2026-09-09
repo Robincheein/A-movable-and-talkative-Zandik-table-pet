@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0-animal.1",
+  "version": "2.0.0-animal.2",
   "size": [
     128,
     128
@@ -10,9 +10,9 @@
   ],
   "climbing_enabled": false,
   "runtime_mapping": {
-    "shime1.png": "idle",
-    "shime2.png": "walk_01",
-    "shime3.png": "walk_02",
+    "shime1.png": "walk_v2/fox_stand",
+    "shime2.png": "walk_v2/fox_walk_01",
+    "shime3.png": "walk_v2/fox_walk_03",
     "shime4.png": "falling",
     "shime5.png": "dragged",
     "shime6.png": "dragged",
@@ -20,7 +20,7 @@
     "shime8.png": "dragged",
     "shime9.png": "dragged",
     "shime10.png": "dragged",
-    "shime11.png": "idle",
+    "shime11.png": "walk_v2/fox_sit",
     "shime12.png": "dragged",
     "shime13.png": "dragged",
     "shime14.png": "dragged",
@@ -40,12 +40,12 @@
     "shime28.png": "head_tilt",
     "shime29.png": "head_tilt",
     "shime30.png": "sleep",
-    "shime31.png": "idle",
+    "shime31.png": "walk_v2/fox_sit",
     "shime32.png": "paw",
     "shime33.png": "paw",
-    "shime34.png": "walk_01",
-    "shime35.png": "walk_02",
-    "shime36.png": "walk_03",
+    "shime34.png": "walk_v2/fox_walk_01",
+    "shime35.png": "walk_v2/fox_walk_03",
+    "shime36.png": "walk_v2/fox_walk_05",
     "shime37.png": "paw",
     "shime38.png": "paw",
     "shime39.png": "paw",
@@ -56,11 +56,28 @@
     "shime44.png": "paw",
     "shime45.png": "paw",
     "shime46.png": "paw",
-    "fox_walk_01.png": "walk_01",
-    "fox_walk_02.png": "walk_02",
-    "fox_walk_03.png": "walk_03",
-    "fox_walk_04.png": "walk_04",
-    "icon.png": "idle"
+    "fox_walk_01.png": "walk_v2/fox_walk_01",
+    "fox_walk_02.png": "walk_v2/fox_walk_02",
+    "fox_walk_03.png": "walk_v2/fox_walk_03",
+    "fox_walk_04.png": "walk_v2/fox_walk_04",
+    "icon.png": "idle",
+    "fox_walk_05.png": "walk_v2/fox_walk_05",
+    "fox_walk_06.png": "walk_v2/fox_walk_06",
+    "fox_walk_07.png": "walk_v2/fox_walk_07",
+    "fox_walk_08.png": "walk_v2/fox_walk_08",
+    "fox_stand.png": "walk_v2/fox_stand",
+    "fox_pet_approach.png": "pet_moods/approach",
+    "fox_pet_normal_refuse.png": "pet_moods/normal_refuse",
+    "fox_pet_angry_block.png": "pet_moods/angry_block",
+    "fox_pet_good_mood_allow.png": "pet_moods/good_mood_allow",
+    "fox_pet_withdraw.png": "pet_moods/withdraw",
+    "fox_pet_rest.png": "pet_moods/rest",
+    "fox_pet_near.png": "pet_moods/near",
+    "fox_pet_half_raise.png": "pet_moods/half_raise",
+    "fox_pet_mid_push.png": "pet_moods/mid_push",
+    "fox_pet_lower_paw.png": "pet_moods/lower_paw",
+    "fox_pet_stroke_left.png": "pet_moods/stroke_left",
+    "fox_pet_stroke_right.png": "pet_moods/stroke_right"
   },
   "sources": {
     "idle": {
@@ -162,6 +179,29 @@
         1205,
         1107
       ]
+    },
+    "walk_v2_atlas": {
+      "path": "assets/concepts/dottore_walk_v2/atlas.png",
+      "sha256": "aeed996a240352f51df2009df67ab5b9098c7aada8d3c87ab1d1c3f1430ef375"
+    },
+    "walk_v2_sit_grounded": {
+      "path": "assets/concepts/dottore_walk_v2/sit_grounded.png",
+      "sha256": "45134d662d565ae6b4bffcfc9842bb8e012185de3647490de482e520c65c6f25"
     }
+  },
+  "walk": {
+    "frame_count": 8,
+    "frame_ms": 160,
+    "speed_px_per_second": 25
+  },
+  "head_pat": {
+    "drawn_interaction_poses": 12,
+    "idle_sprite": "fox_pet_rest.png",
+    "reactions": [
+      "refuse",
+      "angry",
+      "allow"
+    ],
+    "local_patience": true
   }
 }

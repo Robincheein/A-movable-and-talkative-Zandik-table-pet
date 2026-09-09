@@ -20,6 +20,12 @@ extends BorderedAction {
     private static final int DEFAULT_TARGETX = Integer.MAX_VALUE;
     private static final String PARAMETER_TARGETY = "\u76ee\u7684\u5730Y";
     private static final int DEFAULT_TARGETY = Integer.MAX_VALUE;
+    private boolean edgeReached;
+
+    @Override public void init(com.group_finity.mascot.Mascot mascot) throws VariableException {
+        super.init(mascot);
+        edgeReached = false;
+    }
 
     public Move(List<Animation> animations, VariableMap params) {
         super(animations, params);
@@ -37,7 +43,7 @@ extends BorderedAction {
         if (targetY != Integer.MIN_VALUE && this.getMascot().getAnchor().y == targetY) {
             noMoveY = true;
         }
-        return super.hasNext() && !noMoveX && !noMoveY;
+        return !edgeReached && super.hasNext() && !noMoveX && !noMoveY;
     }
 
     @Override
@@ -63,6 +69,12 @@ extends BorderedAction {
         if (targetY != Integer.MAX_VALUE && (down && this.getMascot().getAnchor().y >= targetY || !down && this.getMascot().getAnchor().y <= targetY)) {
             this.getMascot().setAnchor(new Point(this.getMascot().getAnchor().x, targetY));
         }
+        int requestedX = this.getMascot().getAnchor().x;
+        this.getMascot().constrainToWorkArea();
+        if (requestedX != this.getMascot().getAnchor().x) {
+            edgeReached = true;
+            this.getMascot().setLookRight(requestedX < this.getMascot().getAnchor().x);
+        }
     }
 
     private int getTargetY() throws VariableException {
@@ -73,4 +85,3 @@ extends BorderedAction {
         return ((Number)this.eval(PARAMETER_TARGETX, Number.class, Integer.MAX_VALUE)).intValue();
     }
 }
-

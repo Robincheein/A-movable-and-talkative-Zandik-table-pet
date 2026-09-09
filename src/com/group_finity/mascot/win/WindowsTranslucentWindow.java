@@ -27,11 +27,15 @@ import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.platform.win32.WinUser;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JWindow;
+import javax.swing.SwingUtilities;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 class WindowsTranslucentWindow
 extends JWindow
@@ -39,6 +43,20 @@ implements TranslucentWindow {
     private static final long serialVersionUID = 1L;
     private WindowsNativeImage image;
     private int alpha = 255;
+    private final AtomicReference<Frame> pendingFrame = new AtomicReference<Frame>();
+    private final AtomicBoolean frameQueued = new AtomicBoolean();
+    private volatile boolean disposed;
+
+    private static final class Frame {
+        final Rectangle bounds;
+        final WindowsNativeImage image;
+        final float opacity;
+        Frame(Rectangle bounds, NativeImage image, float opacity) {
+            this.bounds = new Rectangle(bounds);
+            this.image = (WindowsNativeImage)image;
+            this.opacity = opacity;
+        }
+    }
 
     WindowsTranslucentWindow() {
     }
@@ -59,6 +77,10 @@ implements TranslucentWindow {
     }
 
     private void paint(WinDef.HBITMAP imageHandle, int alpha) {
+        paint(imageHandle, alpha, null);
+    }
+
+    private void paint(WinDef.HBITMAP imageHandle, int alpha, Rectangle target) {
         WinDef.HWND hWnd = new WinDef.HWND(Native.getComponentPointer((Component)this));
         if (User32.INSTANCE.IsWindowVisible(hWnd)) {
             int exStyle = User32.INSTANCE.GetWindowLong(hWnd, -20);
@@ -77,11 +99,11 @@ implements TranslucentWindow {
             bf.SourceConstantAlpha = (byte)alpha;
             bf.AlphaFormat = 1;
             WinUser.POINT lt = new WinUser.POINT();
-            lt.x = windowRect.left;
-            lt.y = windowRect.top;
+            lt.x = target == null ? windowRect.left : target.x;
+            lt.y = target == null ? windowRect.top : target.y;
             WinUser.SIZE size = new WinUser.SIZE();
-            size.cx = windowRect.right - windowRect.left;
-            size.cy = windowRect.bottom - windowRect.top;
+            size.cx = target == null ? windowRect.right - windowRect.left : target.width;
+            size.cy = target == null ? windowRect.bottom - windowRect.top : target.height;
             WinUser.POINT zero = new WinUser.POINT();
             User32.INSTANCE.UpdateLayeredWindow(hWnd, null, lt, size, memDC, zero, 0, bf, 2);
             GDI32.INSTANCE.SelectObject(memDC, oldBmp);
@@ -123,10 +145,49 @@ implements TranslucentWindow {
         this.repaint();
     }
 
+    @Override public void present(Rectangle bounds, NativeImage image, float opacity) {
+        if (disposed) return;
+        pendingFrame.set(new Frame(bounds, image, opacity));
+        queueLatestFrame();
+    }
+
+    private void queueLatestFrame() {
+        if (!frameQueued.compareAndSet(false, true)) return;
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Frame frame = pendingFrame.getAndSet(null);
+                if (disposed || frame == null) return;
+                displayFrame(frame.bounds, frame.image, frame.opacity);
+            } finally {
+                frameQueued.set(false);
+                // Coalesce busy-EDT frames instead of replaying stale mouse positions.
+                if (!disposed && pendingFrame.get() != null) queueLatestFrame();
+            }
+        });
+    }
+
+    protected void displayFrame(Rectangle bounds, WindowsNativeImage image, float opacity) {
+        this.image = image;
+        this.alpha = Math.max(0, Math.min(255, Math.round(opacity * 255)));
+        if (!isVisible()) {
+            setBounds(bounds);
+            setVisible(true);
+        }
+        // UpdateLayeredWindow changes the bitmap AND its destination atomically.
+        // Do not call setBounds first: Windows would move the old pixels there.
+        paint(image.getHandle(), alpha, bounds);
+        setBounds(bounds); // keep AWT's cached bounds in sync afterwards
+    }
+
+    @Override public void dispose() {
+        disposed = true;
+        pendingFrame.set(null);
+        super.dispose();
+    }
+
     @Override
     public void setWindowOpacity(float opacity) {
         this.setAlpha(Math.max(0, Math.min(255, Math.round(opacity * 255.0f))));
         this.updateImage();
     }
 }
-

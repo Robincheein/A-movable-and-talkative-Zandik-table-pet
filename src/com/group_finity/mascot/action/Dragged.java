@@ -4,6 +4,7 @@
 package com.group_finity.mascot.action;
 
 import com.group_finity.mascot.Mascot;
+import com.group_finity.mascot.SettingsManager;
 import com.group_finity.mascot.action.ActionBase;
 import com.group_finity.mascot.animation.Animation;
 import com.group_finity.mascot.environment.Location;
@@ -12,15 +13,14 @@ import com.group_finity.mascot.exception.VariableException;
 import com.group_finity.mascot.script.VariableMap;
 import java.awt.Point;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class Dragged
 extends ActionBase {
-    private static final Logger log = Logger.getLogger(Dragged.class.getName());
     private static final String VARIABLE_FOOTX = "footX";
     private double footX;
     private double footDx;
-    private int timeToRegist;
+    private Point gripOffset;
+    private double tilt;
 
     public Dragged(List<Animation> animations, VariableMap params) {
         super(animations, params);
@@ -30,37 +30,36 @@ extends ActionBase {
     public void init(Mascot mascot) throws VariableException {
         super.init(mascot);
         this.setFootX(this.getEnvironment().getCursor().getX());
-        this.setTimeToRegist(250);
+        this.footDx = 0;
+        Location cursor = getEnvironment().getCursor();
+        gripOffset = new Point(mascot.getAnchor().x - cursor.getX(), mascot.getAnchor().y - cursor.getY());
+        tilt = 0;
+        mascot.setAnimatingPublic(true);
     }
 
     @Override
     public boolean hasNext() throws VariableException {
-        boolean intime = this.getTime() < this.getTimeToRegist();
-        boolean lukewarm = Math.random() >= 0.1;
-        return super.hasNext() && (intime || lukewarm);
+        // Only mouse release ends dragging; no random escape at the edge or after a timeout.
+        return super.hasNext();
     }
 
     @Override
     protected void tick() throws LostGroundException, VariableException {
-        this.getMascot().setLookRight(false);
         Location cursor = this.getEnvironment().getCursor();
-        if (Math.abs(cursor.getX() - this.getMascot().getAnchor().x) >= 5) {
-            this.setTime(0);
-        }
         int newX = cursor.getX();
         this.setFootDx((this.getFootDx() + ((double)newX - this.getFootX()) * 0.1) * 0.8);
         this.setFootX(this.getFootX() + this.getFootDx());
         this.putVariable(VARIABLE_FOOTX, this.getFootX());
         this.getAnimation().next(this.getMascot(), this.getTime());
-        this.getMascot().setAnchor(new Point(cursor.getX(), cursor.getY() + 120));
-    }
-
-    public void setTimeToRegist(int timeToRegist) {
-        this.timeToRegist = timeToRegist;
-    }
-
-    private int getTimeToRegist() {
-        return this.timeToRegist;
+        double pickup = Math.min(1.0, getTime() / 6.0);
+        pickup = pickup * pickup * (3 - 2 * pickup);
+        double targetTilt = Math.max(-4, Math.min(4, -cursor.getDx() * 0.15))
+                + Math.sin(getTime() * Math.PI / 24.0) * 2;
+        tilt += (targetTilt - tilt) * 0.25;
+        getMascot().setImage(getMascot().getImage().motionFrame((int)Math.round(tilt * pickup), 100));
+        double scale = SettingsManager.getInstance().getCharacterScale();
+        getMascot().setAnchor(new Point(cursor.getX() + gripOffset.x,
+                cursor.getY() + gripOffset.y - (int)Math.round(4 * scale * pickup)));
     }
 
     private void setFootX(double footX) {
@@ -79,4 +78,3 @@ extends ActionBase {
         return this.footDx;
     }
 }
-

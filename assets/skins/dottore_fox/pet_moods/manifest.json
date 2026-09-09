@@ -1,0 +1,157 @@
+{
+  "canvas": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    128
+  ],
+  "scale": 0.085,
+  "poses": {
+    "approach": {
+      "source": "assets/concepts/dottore_pet_moods_v2/approach.png",
+      "sha256": "24f94ca73a5e713e029ab26735799e328565f8babff7b5f0c47329bb5f246c96",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.0,
+      "foreground_bounds": [
+        279,
+        1,
+        1173,
+        1199
+      ]
+    },
+    "normal_refuse": {
+      "source": "assets/concepts/dottore_pet_moods_v2/normal_refuse.png",
+      "sha256": "cc46e899007672099f2e9cfef49cd71adbc29f395354a278afa4a1f05c45b2f6",
+      "source_foot_y": 1174,
+      "source_paw_center_x": 575.5,
+      "foreground_bounds": [
+        147,
+        21,
+        1253,
+        1184
+      ]
+    },
+    "angry_block": {
+      "source": "assets/concepts/dottore_pet_moods_v2/angry_block.png",
+      "sha256": "6498b77ad7c261d6c78941537cb869cf2e0834508d0118eb9c1bd13b156f5282",
+      "source_foot_y": 1174,
+      "source_paw_center_x": 575.0,
+      "foreground_bounds": [
+        57,
+        71,
+        1253,
+        1184
+      ]
+    },
+    "good_mood_allow": {
+      "source": "assets/concepts/dottore_pet_moods_v2/good_mood_allow.png",
+      "sha256": "3575f43412a0999a70b37fbb15d9b7054793ebe87a00da76fa9260d93e209023",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.0,
+      "foreground_bounds": [
+        278,
+        1,
+        1243,
+        1199
+      ]
+    },
+    "withdraw": {
+      "source": "assets/concepts/dottore_pet_moods_v2/withdraw.png",
+      "sha256": "5f10a6fd1cbc774e377f767ea615c18e53364897d9e6e8aa1051dcc9d9d9f322",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.0,
+      "foreground_bounds": [
+        279,
+        1,
+        1253,
+        1199
+      ]
+    },
+    "rest": {
+      "source": "assets/concepts/dottore_pet_moods_v3/rest.png",
+      "sha256": "c49bc088d18bfea70adef20105748e38d960cdf9e05274b20ce642504e47c32e",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.5,
+      "foreground_bounds": [
+        279,
+        29,
+        1150,
+        1199
+      ]
+    },
+    "near": {
+      "source": "assets/concepts/dottore_pet_moods_v3/near.png",
+      "sha256": "1aa62cd1315831777a83e09b4526eebd31b8531401ede1d3ec1f7413a88894eb",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.0,
+      "foreground_bounds": [
+        279,
+        1,
+        1150,
+        1199
+      ]
+    },
+    "half_raise": {
+      "source": "assets/concepts/dottore_pet_moods_v3/half_raise.png",
+      "sha256": "4e5ffefe6bb456900f941723d1f92bc1e08211b8c11753466edf920b8e4d81d6",
+      "source_foot_y": 1174,
+      "source_paw_center_x": 576.0,
+      "foreground_bounds": [
+        192,
+        1,
+        1253,
+        1184
+      ]
+    },
+    "mid_push": {
+      "source": "assets/concepts/dottore_pet_moods_v3/mid_push.png",
+      "sha256": "ec564a209e0e919e98812c2c91a3d229b3ab2c01a54353e38bd0dd1e3a0e08de",
+      "source_foot_y": 1174,
+      "source_paw_center_x": 575.0,
+      "foreground_bounds": [
+        147,
+        21,
+        1253,
+        1184
+      ]
+    },
+    "lower_paw": {
+      "source": "assets/concepts/dottore_pet_moods_v3/lower_paw.png",
+      "sha256": "795e48aecec6a5c6fbb74b5ad5d2ef4d99cf970905b4c46bd346a793d89911ae",
+      "source_foot_y": 1174,
+      "source_paw_center_x": 575.0,
+      "foreground_bounds": [
+        232,
+        21,
+        1253,
+        1184
+      ]
+    },
+    "stroke_left": {
+      "source": "assets/concepts/dottore_pet_moods_v3/stroke_left.png",
+      "sha256": "3859607b39021567c672c1e81b60be4a2d1fbf8c9a3ea962518c191664b36bff",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.5,
+      "foreground_bounds": [
+        279,
+        1,
+        1150,
+        1199
+      ]
+    },
+    "stroke_right": {
+      "source": "assets/concepts/dottore_pet_moods_v3/stroke_right.png",
+      "sha256": "d6e4940b25a6e72885464abd81b85ec188d4edff3fb9d844a388f4b4f336bfbb",
+      "source_foot_y": 1191,
+      "source_paw_center_x": 556.5,
+      "foreground_bounds": [
+        279,
+        1,
+        1253,
+        1199
+      ]
+    }
+  }
+}

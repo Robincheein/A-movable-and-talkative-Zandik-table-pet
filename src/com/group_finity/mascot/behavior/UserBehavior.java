@@ -103,18 +103,8 @@ implements Behavior {
                 if (this.getAction().hasNext()) {
                     this.getAction().next();
                 }
-                if (this.getAction().hasNext()) {
-                    if (!(this.getMascot().getBounds().getX() + this.getMascot().getBounds().getWidth() <= (double)this.getEnvironment().getScreen().getLeft()) && !((double)this.getEnvironment().getScreen().getRight() <= this.getMascot().getBounds().getX()) && !((double)this.getEnvironment().getScreen().getBottom() <= this.getMascot().getBounds().getY())) break block11;
-                    log.log(Level.INFO, "\u753b\u9762\u306e\u5916\u306b\u51fa\u305f({0},{1})", new Object[]{this.getMascot(), this});
-                    this.getMascot().setAnchor(new Point((int)(Math.random() * (double)(this.getEnvironment().getScreen().getRight() - this.getEnvironment().getScreen().getLeft())) + this.getEnvironment().getScreen().getLeft(), this.getEnvironment().getScreen().getTop() - 256));
-                    try {
-                        this.getMascot().setBehavior(this.getConfiguration().buildBehavior(BEHAVIORNAME_FALL));
-                        break block11;
-                    }
-                    catch (BehaviorInstantiationException e) {
-                        throw new CantBeAliveException("\u843d\u3061\u308b\u884c\u52d5\u306e\u521d\u671f\u5316\u306b\u5931\u6557\u3057\u307e\u3057\u305f", e);
-                    }
-                }
+                this.getMascot().constrainToWorkArea();
+                if (this.getAction().hasNext()) break block11;
                 log.log(Level.INFO, "\u884c\u52d5\u5b8c\u4e86({0},{1})", new Object[]{this.getMascot(), this});
                 try {
                     this.getMascot().setBehavior(this.getConfiguration().buildBehavior(this.getName(), this.getMascot()));
@@ -150,4 +140,3 @@ implements Behavior {
         return this.getMascot().getEnvironment();
     }
 }
-

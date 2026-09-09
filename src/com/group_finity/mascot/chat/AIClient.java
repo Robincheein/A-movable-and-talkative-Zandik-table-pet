@@ -147,8 +147,7 @@ public class AIClient {
                     cause.printStackTrace(new java.io.PrintWriter(sw));
                     String stack = sw.toString();
                     log.log(Level.SEVERE, "AI API 调用失败: " + stack);
-                    callback.onError(new RuntimeException(cause.toString() + "\n"
-                            + stack.substring(0, Math.min(300, stack.length()))));
+                    callback.onError(cause);
                 } catch (Exception e) {
                     log.log(Level.SEVERE, "AI API 调用异常", e);
                     callback.onError(e);
@@ -238,6 +237,13 @@ public class AIClient {
         }
 
         // 对话历史（不含 system）
+        if (systemPromptOverride == null) {
+            systemPrompt += "\n\n【最终回复语言】默认只用自然的简体中文与旅行者交谈。"
+                    + "英文参考资料必须消化后用中文表达；角色名用多托雷、潘塔罗涅等中文名。"
+                    + "不要夹入英文旁白、内心独白、分析过程或 thinking 内容。"
+                    + "仅在用户明确要求外语、引用原文，或确需保留代码、网址、技术缩写时保留相应外文。"
+                    + "只输出给旅行者看的最终回答，不输出思考过程。";
+        }
         boolean isAnthropic = endpoint.contains("anthropic");
         if (!isAnthropic) {
             Map<String, String> sysMsg = new HashMap<>();
@@ -332,7 +338,8 @@ public class AIClient {
         if (choices != null && choices.size() > 0) {
             JsonObject msg = choices.get(0).getAsJsonObject().getAsJsonObject("message");
             if (msg != null) {
-                result.text = msg.get("content") != null ? msg.get("content").getAsString() : null;
+                result.text = msg.has("content") && !msg.get("content").isJsonNull()
+                        ? msg.get("content").getAsString() : null;
             }
         }
 
@@ -344,7 +351,10 @@ public class AIClient {
                     JsonObject block = content.get(i).getAsJsonObject();
                     String type = block.has("type") ? block.get("type").getAsString() : "";
                     if ("text".equals(type)) {
-                        result.text = block.has("text") ? block.get("text").getAsString() : null;
+                        if (block.has("text") && !block.get("text").isJsonNull()) {
+                            String part = block.get("text").getAsString();
+                            result.text = result.text == null ? part : result.text + "\n" + part;
+                        }
                     } else if ("thinking".equals(type)) {
                         // thinking 块不提取——跳过
                     } else if ("tool_use".equals(type)) {
@@ -358,47 +368,46 @@ public class AIClient {
             }
         }
 
-        if (result.text == null) {
-            // 没有 text 块时，检查是否只有 thinking（DeepSeek 偶尔不返回 text）
-            JsonArray content = jsonResponse.getAsJsonArray("content");
-            if (content != null) {
-                for (int i = 0; i < content.size(); i++) {
-                    JsonObject block = content.get(i).getAsJsonObject();
-                    if ("thinking".equals(block.has("type") ? block.get("type").getAsString() : "")) {
-                        String th = block.has("thinking") ? block.get("thinking").getAsString() : "";
-                        // 只取前500字符，避免乱码
-                        result.text = th.length() > 500 ? th.substring(0, 500) + "..." : th;
-                        break;
-                    }
-                }
-            }
-        }
         if (result.text == null && result.toolCalls.isEmpty()) {
-            throw new RuntimeException("API 响应无内容");
+            throw new RuntimeException("模型未返回最终回答，可能只生成了思考内容或达到输出上限。请重试。");
         }
 
         log.fine("AI 回复: " + result.text + " tools: " + result.toolCalls);
         if (result.text != null) {
-            result.text = result.text.replaceFirst("(?s)^\\s*<think>.*?</think>\\s*", "").trim();
+            result.text = result.text.replaceAll("(?is)<think(?:ing)?>.*?</think(?:ing)?>", "")
+                    .replaceFirst("(?is)<think(?:ing)?>.*$", "").trim();
             if (result.text.isEmpty() && result.toolCalls.isEmpty()) {
                 throw new RuntimeException("模型只返回了思考过程，没有最终回答");
             }
         }
-        if (roleStyleGuard && systemPromptOverride == null
-                && result.text != null
-                && looksLikeGenericAssistant(result.text)) {
-            log.info("检测到通用助手式语气，执行一次角色纠偏重写");
+        boolean languageDrift = systemPromptOverride == null && result.text != null
+                && needsChineseRewrite(userMessage, result.text);
+        if (systemPromptOverride == null && result.text != null
+                && (languageDrift || (roleStyleGuard && looksLikeGenericAssistant(result.text)))) {
+            log.info("检测到语言或角色语气偏离，执行一次纠偏重写");
             String correction = systemPrompt
                     + "\n\n【输出校准】保留候选回复中的有效信息，按核心人格自然重写。"
                     + "去掉通用客服套话，保留具体的兴趣、判断、实际关照和对象差异。"
                     + "不要为了显得冷酷而强制训斥、反问、否认情感或称人样本。"
-                    + "特别保留潘塔罗涅的私人分量与对意外事物的兴趣。只输出回复。";
+                    + "特别保留潘塔罗涅的私人分量与对意外事物的兴趣。"
+                    + "英文句子和旁白改成简体中文，必要的代码、网址、缩写保持原样。只输出回复。";
             String rewritePrompt = "旅行者原话：" + userMessage
                     + "\n不合格候选回复：" + result.text
                     + "\n请只输出纠偏后的角色回复。";
-            return sendMessage(rewritePrompt, new ConversationHistory(1), correction, false);
+            AIResponse rewritten = sendMessage(rewritePrompt, new ConversationHistory(1), correction, false);
+            // Text correction must not lose or repeat actions chosen by the original reply.
+            result.text = rewritten.text;
         }
         return result;
+    }
+
+    static boolean needsChineseRewrite(String user, String text) {
+        if (user.matches("(?is).*(英文|英语|原文|english|in english).*$")) return false;
+        String prose = text.replaceAll("(?s)```.*?```|`[^`]*`", "")
+                .replaceAll("https?://\\S+", "");
+        // Detect prose, not isolated names, CUDA, API, file paths or model identifiers.
+        return java.util.regex.Pattern.compile("[A-Za-z]{2,}(?:[ ,]+[A-Za-z]{2,}){2,}")
+                .matcher(prose).find();
     }
 
     private boolean isEmotionallyLoaded(String text) {

@@ -18,19 +18,26 @@ New-Item -ItemType Directory -Path $classes,$tests,'dist/.updates' -Force | Out-
 $sources = Get-ChildItem src -Recurse -Filter *.java | ForEach-Object { $_.FullName }
 & "$jdk/javac.exe" -source 8 -target 8 -encoding UTF-8 -cp 'lib/*' -d $classes $sources
 if ($LASTEXITCODE -ne 0) { throw 'Compile failed' }
-& "$jdk/javac.exe" -source 8 -target 8 -encoding UTF-8 -cp "$classes;lib/*" -d $tests tests/AnimalSkinSelfTest.java tests/CharacterPromptSelfTest.java
+& "$jdk/javac.exe" -source 8 -target 8 -encoding UTF-8 -cp "$classes;lib/*" -d $tests tests/AnimalSkinSelfTest.java tests/CharacterPromptSelfTest.java tests/WindowFrameSelfTest.java tests/PetMoodSelfTest.java tests/ScreenBoundsSelfTest.java
 if ($LASTEXITCODE -ne 0) { throw 'Test compile failed' }
 Copy-Item img/*.png -Destination dist/img -Force
 Copy-Item conf/Actions.xml,conf/Behavior.xml,conf/chat_config.example.properties -Destination dist/conf -Force
 & "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;$classes;img;conf;$runtimeLibs" com.group_finity.mascot.AnimalSkinSelfTest .
 if ($LASTEXITCODE -ne 0) { throw 'Skin test failed' }
 # Build only application classes, never private config/data or unrelated test classes.
-& "$jdk/jar.exe" cfm dist/.updates/Shimeji.jar manifest.mf -C $classes com
+& "$jdk/jar.exe" cfm build/animal_candidate.jar manifest.mf -C $classes com
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
-& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;dist/.updates/Shimeji.jar;dist/img;dist/conf;$runtimeLibs" com.group_finity.mascot.AnimalSkinSelfTest dist
+& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;build/animal_candidate.jar;$runtimeLibs" com.group_finity.mascot.PetMoodSelfTest
+if ($LASTEXITCODE -ne 0) { throw 'Pet mood regression failed' }
+& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;build/animal_candidate.jar;$runtimeLibs" com.group_finity.mascot.ScreenBoundsSelfTest
+if ($LASTEXITCODE -ne 0) { throw 'Screen bounds regression failed' }
+& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;build/animal_candidate.jar;dist/img;dist/conf;$runtimeLibs" com.group_finity.mascot.AnimalSkinSelfTest dist
 if ($LASTEXITCODE -ne 0) { throw 'Packaged skin test failed' }
-& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;dist/.updates/Shimeji.jar;$runtimeLibs" com.group_finity.mascot.chat.CharacterPromptSelfTest .
+& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;build/animal_candidate.jar;$runtimeLibs" com.group_finity.mascot.win.WindowFrameSelfTest
+if ($LASTEXITCODE -ne 0) { throw 'Window frame regression failed' }
+& "$jdk/java.exe" '-Dfile.encoding=UTF-8' -cp "$tests;build/animal_candidate.jar;$runtimeLibs" com.group_finity.mascot.chat.CharacterPromptSelfTest .
 if ($LASTEXITCODE -ne 0) { throw 'Prompt regression failed' }
+Copy-Item build/animal_candidate.jar -Destination dist/.updates/Shimeji.jar -Force
 try {
     [IO.File]::Replace((Join-Path $projectRoot 'dist/.updates/Shimeji.jar'), (Join-Path $projectRoot 'dist/Shimeji.jar'), [NullString]::Value)
     Write-Host 'ANIMAL_BUILD_OK: dist/Shimeji.jar'

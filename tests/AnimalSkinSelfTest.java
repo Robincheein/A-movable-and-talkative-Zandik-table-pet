@@ -32,8 +32,12 @@ public class AnimalSkinSelfTest {
         File root = new File(args.length > 0 ? args[0] : ".");
         Set<String> images = new HashSet<String>();
         for (int i = 1; i <= 46; i++) images.add("shime" + i + ".png");
-        for (int i = 1; i <= 4; i++) images.add("fox_walk_0" + i + ".png");
+        for (int i = 1; i <= 8; i++) images.add("fox_walk_0" + i + ".png");
+        images.add("fox_stand.png");
         images.add("icon.png");
+        for (String pose : new String[]{"approach", "normal_refuse", "angry_block", "good_mood_allow", "withdraw",
+                "rest", "near", "half_raise", "mid_push", "lower_paw", "stroke_left", "stroke_right"})
+            images.add("fox_pet_" + pose + ".png");
         for (String name : images) {
             File path = new File(root, "img/" + name);
             BufferedImage im = ImageIO.read(path);
@@ -72,13 +76,31 @@ public class AnimalSkinSelfTest {
         NodeList actionNodes = actions.getElementsByTagName("動作");
         for (int i = 0; i < actionNodes.getLength(); i++) {
             Element action = (Element) actionNodes.item(i);
-            if (!action.getAttribute("名前").matches("歩く|走る|猛ダッシュ")) continue;
+            if (!action.getAttribute("名前").matches("歩く|走る|猛ダッシュ|IEを持って歩く|IEを持って走る")) continue;
             NodeList frames = action.getElementsByTagName("ポーズ");
-            check(frames.getLength() == 4, "Walking frame count");
-            for (int j = 0; j < 4; j++) check(((Element)frames.item(j)).getAttribute("画像")
-                    .equals("/fox_walk_0" + (j + 1) + ".png"), "Walking frame order");
+            check(frames.getLength() == 8, "Walking frame count");
+            for (int j = 0; j < 8; j++) {
+                Element pose = (Element)frames.item(j);
+                check(pose.getAttribute("画像").equals("/fox_walk_0" + (j + 1) + ".png"), "Walking frame order");
+                check(pose.getAttribute("移動速度").equals("-1,0"), "Walking is not constant 25px/s");
+                check(pose.getAttribute("長さ").equals("4"), "Walking cadence is not 160ms/frame");
+                check(pose.getAttribute("基準座標").equals("64,128"), "Walking anchor drift");
+            }
+        }
+        Document behaviorDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new File(root, "conf/Behavior.xml"));
+        for (String tag : new String[]{"行動", "行動参照"}) {
+            NodeList behaviors = behaviorDoc.getElementsByTagName(tag);
+            for (int i = 0; i < behaviors.getLength(); i++) {
+                Element b = (Element)behaviors.item(i);
+                if (b.getAttribute("名前").matches(".*(走る|走って|首が回った|足をぶらぶら|ずりずり).*"))
+                    check(b.getAttribute("頻度").equals("0"), "Fast/jittery auto-behavior still enabled");
+            }
         }
         Mascot mascot = new Mascot();
+        mascot.setManager(new Manager() {
+            @Override public int getCount() { return 1; }
+        });
         try {
             int left = mascot.getEnvironment().getWorkArea().getLeft();
             int top = mascot.getEnvironment().getWorkArea().getTop();
@@ -100,18 +122,164 @@ public class AnimalSkinSelfTest {
                 check(ticks < 1000 && mascot.getEnvironment().getFloor().isOn(mascot.getAnchor()), "Did not land");
                 check(mascot.getAnchor().y > before.y && mascot.getAnchor().y <= bottom, "Fall direction");
             }
-            // Exercise a real four-frame ground walk without showing a window.
+            // Exercise a complete eight-frame ground walk without showing a window.
             mascot.setAnchor(new Point(left + 64, bottom));
             Action walk = config.buildAction("歩く", Collections.singletonMap("目的地X", String.valueOf(left + 300)));
             mascot.setBehavior(new com.group_finity.mascot.behavior.UserBehavior("test-walk", walk, config));
             Set<Object> visitedFrames = new HashSet<Object>();
             int initialX = mascot.getAnchor().x;
-            for (int i = 0; i < 24; i++) {
+            for (int i = 0; i < 32; i++) {
+                int previousX = mascot.getAnchor().x;
                 mascot.tick();
+                check(mascot.getAnchor().x == previousX + 1 && mascot.getAnchor().y == bottom,
+                        "Ground speed or ground height changed between ticks");
                 visitedFrames.add(mascot.getImage());
             }
-            check(visitedFrames.size() >= 4 && mascot.getAnchor().x != initialX, "Four-frame walk did not animate/move");
+            check(visitedFrames.size() == 8 && mascot.getAnchor().x == initialX + 32, "Eight-frame walk did not animate/move");
+            // Real drag action (not just event dispatch), held past the old escape timeout.
+            com.group_finity.mascot.environment.Location cursor = mascot.getEnvironment().getCursor();
+            cursor.setX(left + 200); cursor.setY(top + 150); cursor.setDx(0); cursor.setDy(0);
+            mascot.setAnchor(new Point(left + 200, top + 230));
+            mascot.setLookRight(true);
+            mascot.setAnimatingPublic(false);
+            mascot.setBehavior(config.buildBehavior(com.group_finity.mascot.behavior.UserBehavior.BEHAVIORNAME_DRAGGED));
+            Behavior held = mascot.getBehavior();
+            Point pickupAnchor = new Point(mascot.getAnchor());
+            visitedFrames.clear();
+            int dragDirection = 6;
+            for (int i = 0; i < 400; i++) {
+                if (i == 0) { mascot.tick(); check(mascot.getAnchor().equals(pickupAnchor), "Pickup snapped to fixed offset"); }
+                else {
+                    if (cursor.getX() > right - 160) dragDirection = -6;
+                    if (cursor.getX() < left + 160) dragDirection = 6;
+                    cursor.setX(cursor.getX() + dragDirection); cursor.setDx(dragDirection); mascot.tick();
+                }
+                check(mascot.getBehavior() == held, "Drag escaped/teleported while held");
+                check(mascot.isLookRight(), "Drag forcibly flipped facing");
+                check(mascot.getAnchor().x == cursor.getX(), "Drag lost mouse control");
+                visitedFrames.add(mascot.getImage());
+            }
+            check(visitedFrames.size() > 2, "Dragging is visually static");
+            // Neutral and tilted frames must not resize/recenter the native window.
+            com.group_finity.mascot.image.MascotImage dragSource =
+                    com.group_finity.mascot.image.ImagePairLoader.load("/shime5.png", new Point(64, 128)).getImage(false);
+            for (double scale : new double[]{0.75, 1.0, 1.5, 2.0}) {
+                com.group_finity.mascot.image.MascotImage neutral = dragSource.motionFrame(0, 100);
+                for (int angle = -6; angle <= 6; angle++) {
+                    com.group_finity.mascot.image.MascotImage tilted = dragSource.motionFrame(angle, 100);
+                    check(neutral.getCenter(scale).equals(tilted.getCenter(scale)), "Drag pivot jumps at neutral angle");
+                    check(neutral.getSize(scale).equals(tilted.getSize(scale)), "Drag window resizes at neutral angle");
+                    check(tilted == dragSource.motionFrame(angle, 100), "Motion frame not cached");
+                }
+            }
+            held.mouseReleased(new MouseEvent(mascot.getWindow().asJWindow(), MouseEvent.MOUSE_RELEASED,
+                    0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+            check(mascot.getBehavior() != held, "Release did not leave dragging");
+            int fallTicks = 0;
+            while (!mascot.getEnvironment().getFloor().isOn(mascot.getAnchor()) && fallTicks++ < 500) mascot.tick();
+            check(fallTicks < 500, "Released pet never reached floor");
+            for (int i = 0; i < 16; i++) mascot.tick();
+            check(mascot.getImage().getVisibleBounds(1).height > 90, "Release chain ended in prone/sleeping image");
+            mascot.setAnchor(new Point(left + 300, bottom));
+            Action landing = config.buildAction("跳ねる", Collections.<String, String>emptyMap());
+            check(landing instanceof com.group_finity.mascot.action.Landing, "Landing still maps to sleeping");
+            mascot.setBehavior(new Behavior() {
+                public void init(Mascot pet) throws com.group_finity.mascot.exception.CantBeAliveException {
+                    try { landing.init(pet); } catch (Exception e) { throw new AssertionError(e); }
+                }
+                public void next() { try { landing.next(); } catch (Exception e) { throw new AssertionError(e); } }
+                public void mousePressed(MouseEvent e) {} public void mouseReleased(MouseEvent e) {}
+            });
+            visitedFrames.clear();
+            for (int i = 0; i < 8; i++) {
+                check(landing.hasNext(), "Landing ended early");
+                mascot.tick();
+                check(mascot.getAnchor().y == bottom, "Landing feet left the floor");
+                visitedFrames.add(mascot.getImage());
+            }
+            check(!landing.hasNext() && visitedFrames.size() >= 4, "Landing settle missing or loops forever");
+            java.awt.Rectangle visible = mascot.getImage().getVisibleBounds(1);
+            check(visible.y > 0 && visible.height < 128, "Transparent padding not excluded");
+            java.awt.Rectangle pet = new java.awt.Rectangle(400, 800, 100, 100);
+            java.awt.Rectangle work = new java.awt.Rectangle(0, 0, 1920, 1040);
+            Point dialog = com.group_finity.mascot.chat.DialogPlacement.locate(pet, work, 400, 300);
+            check(dialog.y + 300 == pet.y - 6, "Dialog gap is not six pixels");
+            dialog = com.group_finity.mascot.chat.DialogPlacement.locate(new java.awt.Rectangle(-1800, 0, 100, 100),
+                    new java.awt.Rectangle(-1920, 0, 1920, 1040), 400, 300);
+            check(dialog.y == 106 && dialog.x >= -1920, "Top edge/negative monitor placement");
             final int[] events = new int[2];
+            // Exercise each drawn outcome in both directions, independently of random mood.
+            check(com.group_finity.mascot.action.FoxInteraction.Kind.values().length == 1, "Removed interactions remain");
+            for (PetMood.Reaction reaction : PetMood.Reaction.values()) for (boolean facing : new boolean[]{false, true}) {
+                mascot.setAnchor(new Point(left + 200, bottom));
+                mascot.setLookRight(facing);
+                cursor.setX(right + 300); cursor.setY(bottom - 60);
+                Action petAction = new com.group_finity.mascot.action.FoxInteraction(reaction);
+                mascot.setBehavior(new com.group_finity.mascot.behavior.UserBehavior(null, petAction, config));
+                Behavior interaction = mascot.getBehavior();
+                Set<Object> interactionFrames = new HashSet<Object>();
+                Object lastInteractionFrame = null;
+                int changes = 0, heldTicks = 0, longestHold = 0;
+                int interactionTicks = 0;
+                for (; mascot.getBehavior() == interaction && interactionTicks < 120; interactionTicks++) {
+                    mascot.tick();
+                    check(mascot.getAnchor().y == bottom, "Interaction feet left ground");
+                    check(mascot.getAnchor().x == left + 200, "Head pat moved the pet");
+                    check(mascot.getImage().getSize().equals(new java.awt.Dimension(128, 128)), "Interaction canvas changed");
+                    check(mascot.getImage().getCenter().equals(new Point(64, 128)), "Interaction pivot changed");
+                    interactionFrames.add(mascot.getImage());
+                    if (lastInteractionFrame != mascot.getImage()) {
+                        changes++; heldTicks = 0; lastInteractionFrame = mascot.getImage();
+                    }
+                    longestHold = Math.max(longestHold, ++heldTicks);
+                }
+                int expectedUnique = reaction == PetMood.Reaction.ALLOW ? 7 : reaction == PetMood.Reaction.ANGRY ? 9 : 8;
+                check(interactionFrames.size() == expectedUnique, "Drawn in-between frames missing");
+                check(changes >= 12 && longestHold <= 6, "Head pat still freezes on key poses");
+                check(interactionTicks >= 45 && interactionTicks <= 55, "Interaction timing changed");
+                check(mascot.getBehavior() != interaction, "Interaction did not finish");
+                check(com.group_finity.mascot.action.FoxInteraction.start(mascot,
+                        com.group_finity.mascot.action.FoxInteraction.Kind.PET, config), "Repeat interaction failed");
+                interaction = mascot.getBehavior();
+                interaction.mousePressed(new MouseEvent(mascot.getWindow().asJWindow(), MouseEvent.MOUSE_PRESSED,
+                        0, MouseEvent.BUTTON1_DOWN_MASK, 0, 0, 1, false, MouseEvent.BUTTON1));
+                check(mascot.getBehavior() != interaction, "Interaction blocks dragging");
+            }
+            mascot.setAnchor(new Point(left + 200, top + 100));
+            Behavior airborne = mascot.getBehavior();
+            check(!com.group_finity.mascot.action.FoxInteraction.start(mascot,
+                    com.group_finity.mascot.action.FoxInteraction.Kind.PET, config), "Head pat while airborne");
+            check(mascot.getBehavior() == airborne, "Rejected interaction changed behavior");
+            // Drag beyond all four edges: visible artwork stays inside without
+            // releasing the mouse, then follows it again on return.
+            cursor.setX(left + 300); cursor.setY(top + 150); cursor.setDx(0);
+            mascot.setAnchor(new Point(left + 300, top + 230));
+            mascot.setBehavior(config.buildBehavior(com.group_finity.mascot.behavior.UserBehavior.BEHAVIORNAME_DRAGGED));
+            Behavior edgeDrag = mascot.getBehavior();
+            for (Point outside : new Point[]{new Point(left-500,top-500), new Point(right+500,top-500),
+                    new Point(left-500,bottom+500), new Point(right+500,bottom+500)}) {
+                cursor.setX(outside.x); cursor.setY(outside.y);
+                for (int tick = 0; tick < 30; tick++) {
+                    mascot.tick();
+                    check(mascot.getBehavior() == edgeDrag, "Edge drag released the mouse");
+                    assertInside(mascot);
+                }
+            }
+            cursor.setX(left + 300); cursor.setY(top + 150); mascot.tick();
+            check(mascot.getAnchor().x == cursor.getX(), "Mouse return snapped/lost grip");
+            edgeDrag.mouseReleased(new MouseEvent(mascot.getWindow().asJWindow(), MouseEvent.MOUSE_RELEASED,
+                    0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+            check(mascot.getBehavior() != edgeDrag, "Edge drag cannot release");
+            // Explicit unreachable walk targets must terminate at the visible edge.
+            for (int target : new int[]{left-500, right+500}) {
+                mascot.setAnchor(new Point((left+right)/2, bottom));
+                Action edgeWalk = config.buildAction("歩く", Collections.singletonMap("目的地X", String.valueOf(target)));
+                edgeWalk.init(mascot);
+                int steps = 0;
+                while (edgeWalk.hasNext() && steps++ < 5000) { edgeWalk.next(); assertInside(mascot); }
+                check(steps < 5000, "Walk keeps pushing into screen edge");
+                check(mascot.isLookRight() == (target < left), "Edge walk did not turn inward");
+            }
             mascot.setBehavior(new Behavior() {
                 public void init(Mascot pet) {}
                 public void next() {}
@@ -133,7 +301,14 @@ public class AnimalSkinSelfTest {
         } finally {
             mascot.dispose();
         }
-        System.out.println("ANIMAL_SKIN_OK: " + images.size() + " sprites, XML, no climbing, both-edge landing, four-frame walk, drag threshold");
+        System.out.println("ANIMAL_SKIN_OK: " + images.size() + " sprites, XML, no climbing, edge landing, eight-frame walk, real held/release/settle, dialog placement, drag threshold");
         System.exit(0);
+    }
+
+    private static void assertInside(Mascot mascot) {
+        java.awt.Rectangle visible = mascot.getImage().getVisibleBounds(SettingsManager.getInstance().getCharacterScale());
+        java.awt.Rectangle window = mascot.getBounds();
+        visible.translate(window.x, window.y);
+        check(mascot.getEnvironment().getWorkArea().toRectangle().contains(visible), "Visible artwork outside work area: " + visible);
     }
 }

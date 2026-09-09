@@ -1,0 +1,107 @@
+{
+  "frames": [
+    {
+      "file": "fox_stand.png",
+      "source_bounds": [
+        58,
+        109,
+        401,
+        406
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_01.png",
+      "source_bounds": [
+        471,
+        109,
+        810,
+        406
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_02.png",
+      "source_bounds": [
+        883,
+        111,
+        1221,
+        406
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_03.png",
+      "source_bounds": [
+        52,
+        467,
+        394,
+        763
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_04.png",
+      "source_bounds": [
+        467,
+        468,
+        808,
+        763
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_05.png",
+      "source_bounds": [
+        881,
+        470,
+        1217,
+        767
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_06.png",
+      "source_bounds": [
+        52,
+        815,
+        394,
+        1113
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_07.png",
+      "source_bounds": [
+        470,
+        822,
+        811,
+        1117
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    },
+    {
+      "file": "fox_walk_08.png",
+      "source_bounds": [
+        890,
+        822,
+        1214,
+        1118
+      ],
+      "scale": 0.34402332361516036,
+      "foot_y": 128
+    }
+  ],
+  "frame_ms": 160,
+  "movement_px_per_tick": 1,
+  "tick_ms": 40,
+  "speed_px_per_second": 25
+}

@@ -362,23 +362,22 @@ public class ChatDialog extends JDialog {
 
     private void positionDialog() {
         Point anchor = mascot.getAnchor();
-        if (anchor == null) return;
+        if (anchor == null || mascot.getImage() == null) return;
         JWindow mascotWindow = mascot.getWindow().asJWindow();
-        Point windowLoc = mascotWindow.getLocationOnScreen();
-        Dimension windowSize = mascotWindow.getSize();
-        int mascotScreenX = windowLoc.x + (windowSize.width / 2);
-        int mascotScreenY = windowLoc.y;
-        int dialogX = mascotScreenX - dialogWidth / 2;
-        int dialogY = mascotScreenY - dialogHeight - 20;
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Rectangle pet = mascot.getImage().getVisibleBounds(
+                SettingsManager.getInstance().getCharacterScale());
+        Rectangle canvas = mascot.getBounds();
+        pet.translate(canvas.x, canvas.y);
+        Rectangle workArea = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
         GraphicsConfiguration gc = mascotWindow.getGraphicsConfiguration();
         if (gc != null) {
-            Rectangle bounds = gc.getBounds();
-            dialogX = Math.max(bounds.x, Math.min(dialogX, bounds.x + bounds.width - dialogWidth));
-            dialogY = Math.max(bounds.y, Math.min(dialogY, bounds.y + bounds.height - dialogHeight));
+            workArea = new Rectangle(gc.getBounds());
+            Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+            workArea.x += insets.left; workArea.y += insets.top;
+            workArea.width -= insets.left + insets.right;
+            workArea.height -= insets.top + insets.bottom;
         }
-        setLocation(dialogX, dialogY);
+        setLocation(DialogPlacement.locate(pet, workArea, dialogWidth, dialogHeight));
     }
 
     private void sendMessage() {

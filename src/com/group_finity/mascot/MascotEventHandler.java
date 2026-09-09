@@ -7,6 +7,7 @@ import com.group_finity.mascot.Main;
 import com.group_finity.mascot.Mascot;
 import com.group_finity.mascot.NativeFactory;
 import com.group_finity.mascot.chat.ChatManager;
+import com.group_finity.mascot.action.FoxInteraction;
 import com.group_finity.mascot.exception.CantBeAliveException;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -151,6 +152,24 @@ implements MouseListener, MouseMotionListener {
         JMenuItem chatMenu = new JMenuItem("\u5bf9\u8bdd");
         chatMenu.addActionListener(e -> openChatDialog());
         popup.add(chatMenu);
+        JMenuItem moodInfo = new JMenuItem("摸头耐心：" + getMascot().getPetMood().getLabel());
+        moodInfo.setEnabled(false);
+        popup.add(moodInfo);
+        for (FoxInteraction.Kind kind : FoxInteraction.Kind.values()) {
+            JMenuItem interaction = new JMenuItem(kind.label);
+            interaction.setEnabled(FoxInteraction.canStart(getMascot()));
+            interaction.setToolTipText("站稳后可以互动；拖拽可随时打断");
+            interaction.addActionListener(e -> {
+                try {
+                    FoxInteraction.start(getMascot(), kind, Main.getInstance().getConfiguration());
+                } catch (Exception ex) {
+                    log.log(Level.WARNING, "互动启动失败", ex);
+                    javax.swing.JOptionPane.showMessageDialog(getMascot().getWindow().asJWindow(),
+                            "互动暂时未能启动，请重试。", "互动", javax.swing.JOptionPane.WARNING_MESSAGE);
+                }
+            });
+            popup.add(interaction);
+        }
         JMenuItem settingsMenu = new JMenuItem("设置");
         settingsMenu.addActionListener(e -> SettingsDialog.open(getMascot()));
         popup.add(settingsMenu);
@@ -233,4 +252,3 @@ implements MouseListener, MouseMotionListener {
         return this.mascot;
     }
 }
-
